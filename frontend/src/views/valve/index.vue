@@ -11,6 +11,53 @@
       </div>
     </header>
 
+    <!-- 竣工测量入库结论同步过来的巡检待办 -->
+    <article class="sync-panel">
+      <header class="sync-head">
+        <h3>管网入库同步待办</h3>
+        <label class="sync-filter">
+          <input v-model="showDoneTodos" type="checkbox" @change="reloadTodos" />
+          显示已办结（{{ todos.length }} 条）
+        </label>
+      </header>
+      <p class="page-desc">下列待办由「管网竣工测量入库」在确认入库时自动同步，测量编号、管段与入库结论均取自落库记录；现场核对阀门井坐标无误后办结。</p>
+      <table v-if="visibleTodos.length" class="data-table">
+        <thead>
+          <tr>
+            <th>测量编号</th>
+            <th>管段编号 / 名称</th>
+            <th>入库结论</th>
+            <th>入库时间</th>
+            <th>待办状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="todo in visibleTodos" :key="todo.id" :class="{ 'row-done': todo.done }">
+            <td>
+              <RouterLink class="link" :to="`/pipeline/${todo.surveyId}`">{{ todo.surveyNo }}</RouterLink>
+            </td>
+            <td>
+              <div>{{ todo.segmentCode }}</div>
+              <div class="cell-sub">{{ todo.segmentName }}</div>
+            </td>
+            <td class="cell-conclusion">{{ todo.conclusion }}</td>
+            <td>{{ todo.warehousedAt }}</td>
+            <td>
+              <span class="status-tag" :class="todo.done ? 'st-done' : 'st-review'">
+                {{ todo.done ? `已办结 ${todo.doneAt}` : '待现场核对' }}
+              </span>
+            </td>
+            <td>
+              <button v-if="!todo.done" class="link" type="button" @click="finishTodo(todo.id)">现场核对无误，办结</button>
+              <span v-else class="cell-muted">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-else class="empty-state">暂无管网入库同步的巡检待办</p>
+    </article>
+
     <div class="stat-row">
       <article v-for="item in stats" :key="item.label" class="stat-card">
         <span class="stat-label">{{ item.label }}</span>
@@ -79,6 +126,11 @@ import {
   moduleMeta,
   runAction as applyAction,
 } from '@/api/local-service'
+import {
+  completeValveTodo,
+  listValveInspectionTodos,
+} from '@/api/pipeline-service'
+import type { ValveInspectionTodo } from '@/data/pipeline-types'
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('valve')
@@ -92,6 +144,28 @@ const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
 const filterFields = columns.slice(0, 3)
+
+// 入库同步待办：与竣工测量台账读同一存储，入库结论改不了，这里也不会变。
+const todos = ref<ValveInspectionTodo[]>([])
+const showDoneTodos = ref(false)
+const visibleTodos = computed(() =>
+  showDoneTodos.value ? todos.value : todos.value.filter((todo) => !todo.done),
+)
+
+function reloadTodos() {
+  todos.value = listValveInspectionTodos(true)
+}
+
+function finishTodo(id: number) {
+  errorMessage.value = ''
+  const result = completeValveTodo(id)
+  if (!result.ok) {
+    errorMessage.value = result.message
+    return
+  }
+  reloadTodos()
+}
+
 const statusSummary = computed(() =>
   statuses.map((status: string) => ({
     status,
@@ -131,6 +205,7 @@ function reload() {
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '阀门井巡检列表读取失败'
   }
+  reloadTodos()
 }
 
 onMounted(reload)

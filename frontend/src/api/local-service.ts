@@ -1,5 +1,6 @@
 import { MODULE_BY_KEY } from '@/data/modules'
 import { allRows, listRows, resetRows, saveRows } from '@/data/local-store'
+import { pendingValveTodoCount, surveyStats } from '@/api/pipeline-service'
 import type { ActionResult, EntryRow, ModuleMeta, OverviewResult, PageResult } from '@/data/types'
 
 // 会写进数据的「往回走」动作：命中就把这条记录标成异常态，看板上能一眼看出来。
@@ -95,10 +96,19 @@ export function loadOverview(): OverviewResult {
       abnormal: entries.filter((row) => row.abnormal).length,
     }
   })
+  // 竣工测量入库是专用状态机，单独汇总后并在「阀门井巡检」之前。
+  const survey = surveyStats()
+  const valveIndex = modules.findIndex((item) => item.name === '阀门井巡检')
+  modules.splice(valveIndex < 0 ? modules.length : valveIndex, 0, {
+    name: '管网竣工测量入库',
+    created: survey.total,
+    pending: survey.pending,
+    abnormal: survey.abnormal,
+  })
   const cards = [
     { label: '业务模块', value: modules.length },
     { label: '登记总量', value: modules.reduce((sum, item) => sum + item.created, 0) },
-    { label: '待处理', value: modules.reduce((sum, item) => sum + item.pending, 0) },
+    { label: '待处理', value: modules.reduce((sum, item) => sum + item.pending, 0) + pendingValveTodoCount() },
     { label: '异常量', value: modules.reduce((sum, item) => sum + item.abnormal, 0) },
   ]
   return { cards, modules }

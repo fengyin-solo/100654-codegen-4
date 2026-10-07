@@ -19,6 +19,8 @@ const Valve = () => import('@/views/valve/index.vue')
 const Chem = () => import('@/views/chem/index.vue')
 const Equipmaint = () => import('@/views/equipmaint/index.vue')
 const Shift = () => import('@/views/shift/index.vue')
+const Pipeline = () => import('@/views/pipeline/index.vue')
+const PipelineDetail = () => import('@/views/pipeline/detail.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -38,6 +40,8 @@ const router = createRouter({
     { path: '/meterread', name: 'meterread', component: Meterread },
     { path: '/burstrepair', name: 'burstrepair', component: Burstrepair },
     { path: '/sourcewater', name: 'sourcewater', component: Sourcewater },
+    { path: '/pipeline', name: 'pipeline', component: Pipeline },
+    { path: '/pipeline/:id(\\d+)', name: 'pipeline-detail', component: PipelineDetail },
     { path: '/valve', name: 'valve', component: Valve },
     { path: '/chem', name: 'chem', component: Chem },
     { path: '/equipmaint', name: 'equipmaint', component: Equipmaint },
