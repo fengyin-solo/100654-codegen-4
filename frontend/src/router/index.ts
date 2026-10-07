@@ -11,6 +11,8 @@ const Clearwell = () => import('@/views/clearwell/index.vue')
 const Quality = () => import('@/views/quality/index.vue')
 const Dispatch = () => import('@/views/dispatch/index.vue')
 const Pressure = () => import('@/views/pressure/index.vue')
+const Pipesurvey = () => import('@/views/pipesurvey/index.vue')
+const PipesurveyDetail = () => import('@/views/pipesurvey/detail.vue')
 const Secondary = () => import('@/views/secondary/index.vue')
 const Meterread = () => import('@/views/meterread/index.vue')
 const Burstrepair = () => import('@/views/burstrepair/index.vue')
@@ -34,6 +36,8 @@ const router = createRouter({
     { path: '/quality', name: 'quality', component: Quality },
     { path: '/dispatch', name: 'dispatch', component: Dispatch },
     { path: '/pressure', name: 'pressure', component: Pressure },
+    { path: '/pipesurvey', name: 'pipesurvey', component: Pipesurvey },
+    { path: '/pipesurvey/:id', name: 'pipesurvey-detail', component: PipesurveyDetail },
     { path: '/secondary', name: 'secondary', component: Secondary },
     { path: '/meterread', name: 'meterread', component: Meterread },
     { path: '/burstrepair', name: 'burstrepair', component: Burstrepair },
